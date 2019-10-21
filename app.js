@@ -4,34 +4,81 @@ const app = express();
 const bodyParser = require('body-parser');
 const port = process.env.port || 4000;
 let jsonParser = bodyParser.json();
-const MongoClient = require('mongodb').MongoClient;
+const mongoose = require('mongoose');
+
 
 app.use(express.static('public'));
 
-
-/*
-username: rmtar
-pass: rmtar
-mongodb+srv://rmtar:<password>@usersdb-zepwb.mongodb.net/test?retryWrites=true&w=majority
-*/
-const mongoClient = new MongoClient('mongodb+srv://rmtar:rmtar@usersdb-zepwb.mongodb.net/test?retryWrites=true&w=majority', {useNewUrlParser: true});
-
-mongoClient.connect(function(err, client) {
-
-  const db = client.db('usersdb');
-  const colliction = db.collection('users');
-  let users = [{name: "Bob", age: 34} , {name: "Alice", age: 21}, {name: "Tom", age: 45}];
-
-  colliction.insertMany(users, function(err, result) {
-    if(err) {
-      return console.log(err);
-    }
-    console.log(result.ops);
-    client.close();
-  });
-
-  
+const userSchema = mongoose.Schema({
+  name: {
+    firstname: String,
+    lastname: String
+  },
+  created: Date
 });
+
+const authorSchema = mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  name: {
+    firstname: String,
+    lastname: String
+  },
+  biography: String,
+  twitter: String,
+  facebook: String,
+  profilePictures: Buffer,
+  created: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const bookSchema = mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  title: String,
+  summary: String,
+  isbn: String,
+  thumbnail: Buffer,
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Author'
+  },
+  raitings: [
+    {
+      symmary: String,
+      detail: String,
+      numberOfStars: Number,
+      created: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
+  created: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+let Author = mongoose.model('Author', authorSchema);
+let Book = mongoose.model('Book', bookSchema);
+
+const urlMongoDB = 'mongodb+srv://rmtar:rmtar@usersdb-zepwb.mongodb.net/usersdb?retryWrites=true&w=majority';
+
+mongoose.connect(urlMongoDB, {useNewUrlParser: true}, (err) => {
+  if(err) {
+    throw new Error('*** ERR CONNECT TO DB ***');
+  }
+  console.log('--- connect succesfully ---');
+});
+
+
+
+
+
+
+
+
 
 
 app.get('/', (req, res) => {
